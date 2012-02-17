@@ -1,9 +1,7 @@
 package mk.tm.android.tiled.ui;
 
-import mk.tm.android.tiled.board.Board;
-import mk.tm.android.tiled.board.Field;
-import mk.tm.android.tiled.board.FieldState;
-import mk.tm.android.tiled.board.Position;
+import mk.tm.android.tiled.board.*;
+import org.andengine.entity.IEntity;
 import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.input.touch.TouchEvent;
@@ -11,7 +9,7 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import java.util.List;
 
-public class BoardScene extends Scene {
+public class BoardScene extends Scene implements IFieldMovementListener {
 
     private final Board mBoard;
 
@@ -25,50 +23,79 @@ public class BoardScene extends Scene {
         this.mWidth = width;
         this.mHeight = height;
 
-        this.mBoard = new Board(width, height, startPosition, unavailableFields) {
-            @Override
-            public void onFieldChanged(Position position, FieldState newState) {
-
-            }
-        };
+        this.mBoard = new Board(width, height, startPosition, unavailableFields);
+        this.mBoard.setFieldMovementListener(this);
     }
 
-    private Rectangle createField(Field field, VertexBufferObjectManager vertexBufferObjectManager) {
-        float width = 75f;
-        float height = 75f;
+    private BoardField currentTouched;
 
-        float x = (field.getPosition().x * width) + (field.getPosition().x * 5);
-        float y = (field.getPosition().y * height) + (field.getPosition().y * 5);
+    private Rectangle createField(Position field, VertexBufferObjectManager vertexBufferObjectManager) {
+        float width = 80f;
+        float height = 80f;
 
-        final BoardField coloredRect = new BoardField(x, y, width, height, vertexBufferObjectManager) {
+        float x = (field.x * width) + (field.x * 5);
+        float y = (field.y * height) + (field.y * 5);
+
+        final BoardField newField = new BoardField(x, y, width, height, vertexBufferObjectManager) {
             @Override
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, final float pTouchAreaLocalX, final float pTouchAreaLocalY) {
-                if (BoardScene.this.mBoard.move(this.getPosition()))
-                    this.setColor(1, 0, 0);
+                if (currentTouched != this) {
+                    BoardScene.this.mBoard.move(this.getPosition());
+                    currentTouched = this;
+                }
                 return true;
             }
         };
-        coloredRect.setPosition(field.getPosition());
+        newField.setPosition(field);
 
         switch (field.getState()) {
             case FREE:
-                coloredRect.setColor(1, 1, 1);
+                newField.setColor(1, 1, 1);
                 break;
             case MARKED:
-                coloredRect.setColor(1, 0, 0);
+                newField.setColor(1, 0, 0);
                 break;
             case UNAVAILABLE:
-                coloredRect.setColor(0.4f, 0.4f, 0.4f);
+                newField.setColor(0.4f, 0.4f, 0.4f);
                 break;
         }
-        return coloredRect;
+        return newField;
     }
 
     public void init(VertexBufferObjectManager vertexBufferObjectManager) {
-        for (Field field : mBoard.getFields()) {
+        for (Position field : mBoard.getFields()) {
             Rectangle rect = createField(field, vertexBufferObjectManager);
             registerTouchArea(rect);
             attachChild(rect);
         }
+    }
+
+    @Override
+    public void onFieldChanged(Position current, Position last) {
+        BoardField curr = get(current);
+        BoardField bef = get(last);
+
+        switch (last.getState()) {
+            case FREE:
+                bef.setColor(1, 1, 1);
+                break;
+            case MARKED:
+                bef.setColor(1, 0, 0);
+                break;
+            case UNAVAILABLE:
+                bef.setColor(0.4f, 0.4f, 0.4f);
+                break;
+        }
+
+        curr.setColor(0, 0, 1);
+    }
+
+    private BoardField get(Position position) {
+        for (IEntity field : this.mChildren) {
+            BoardField f = (BoardField) field;
+            if (f.getPosition().equals(position))
+                return f;
+        }
+        return null;
     }
 }

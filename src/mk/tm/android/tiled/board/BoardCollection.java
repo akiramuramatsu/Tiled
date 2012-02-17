@@ -9,20 +9,12 @@ import java.util.*;
  * Time: 5:35 PM
  * To change this template use File | Settings | File Templates.
  */
-public class BoardCollection extends ArrayList<Field> {
-    public Field get(Position position) {
-        for (Field field : this) {
-            if (field.position.equals(position))
+public class BoardCollection extends ArrayList<Position> {
+    public Position get(Position position) {
+        for (Position field : this) {
+            if (field.equals(position))
                 return field;
         }
         return null;
-    }
-
-    public Position last() {
-        return this.get(this.size() - 1).getPosition();
-    }
-
-    public Position beforeLast() {
-        return this.get(this.size() - 2).getPosition();
     }
 }

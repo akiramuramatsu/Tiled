@@ -37,7 +37,7 @@ public class BoardActivity extends SimpleBaseGameActivity {
 
         BoardScene scene = null;
         try {
-            scene = new BoardScene(5, 7, new Position(0, 0), null);
+            scene = new BoardScene(6, 7, new Position(0, 0), null);
             scene.init(this.getVertexBufferObjectManager());
         } catch (Exception e) {
             e.printStackTrace();

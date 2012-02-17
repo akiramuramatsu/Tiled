@@ -12,11 +12,20 @@ public class Position {
     public final int x;
     public final int y;
 
+    private FieldState state;
+
     public Position(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+    public FieldState getState() {
+        return this.state;
+    }
+
+    public void setState(FieldState state) {
+        this.state = state;
+    }
 
     @Override
     public boolean equals(Object obj) {

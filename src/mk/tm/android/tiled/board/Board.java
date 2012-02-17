@@ -9,11 +9,10 @@ import java.util.List;
  * Time: 5:33 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class Board {
+public class Board {
     private BoardCollection board;
-    private Position current;
-    private Position startedAt;
-    private History history;
+    private PositionCollection history;
+    private IFieldMovementListener movementListener;
 
     public Board(int width, int height, Position startPosition, List<Position> unavailableFields) throws Exception {
 
@@ -26,7 +25,7 @@ public abstract class Board {
         mAllowDiagonal = false;
         mAllowBack = true;
 
-        history = new History();
+        history = new PositionCollection();
 
         // check if all fields are within the board
         if (unavailableFields != null)
@@ -38,9 +37,8 @@ public abstract class Board {
         board = new BoardCollection();
         for (int i = 0; i < mWidth; i++)
             for (int j = 0; j < mHeight; j++) {
-                Field field = new Field();
-                field.state = FieldState.FREE;
-                field.position = new Position(i, j);
+                Position field = new Position(i, j);
+                field.setState(FieldState.FREE);
 
                 board.add(field);
             }
@@ -48,19 +46,19 @@ public abstract class Board {
         // mark unavailable fields
         if (unavailableFields != null)
             for (Position p : unavailableFields)
-                board.get(p).state = FieldState.UNAVAILABLE;
+                board.get(p).setState(FieldState.UNAVAILABLE);
 
         // start position must be free
         if (!isAvailable(startPosition))
             throw new Exception("Must start on empty field.");
 
-        current = startPosition.clone();
-        startedAt = startPosition.clone();
+        //current = startPosition.clone();
+        //startedAt = startPosition.clone();
         // occupy the start position
-        board.get(current).state = FieldState.MARKED;
+        board.get(startPosition).setState(FieldState.MARKED);
 
         // add the move to history
-        history.add(current);
+        history.add(startPosition);
     }
 
     private int mWidth;
@@ -97,20 +95,19 @@ public abstract class Board {
         return history.toArray(new Position[0]);
     }
 
-    public Field[] getFields(){
-        return board.toArray(new Field[0]);
+    public Position[] getFields() {
+        return board.toArray(new Position[0]);
     }
 
     public void reset() {
-        for (Field field : board) {
-            if (field.state == FieldState.MARKED)
-                field.state = FieldState.FREE;
+        for (Position field : board) {
+            if (field.getState() == FieldState.MARKED)
+                field.setState(FieldState.FREE);
         }
-        current = startedAt.clone();
-        board.get(current).state = FieldState.MARKED;
 
+        Position p = history.last();
         history.clear();
-        history.add(current.clone());
+        history.add(p);
     }
 
     public boolean move(int x, int y) {
@@ -125,28 +122,29 @@ public abstract class Board {
                 || isSame(p) || !isAvailable(p) || !isWithinBounds(p))
             return false;
 
-        history.add(p.clone());
-        current = p.clone();
-        board.get(p).state = FieldState.MARKED;
+        history.add(p);
+        board.get(p).setState(FieldState.MARKED);
+
+        onFieldChanged(board.get(p), board.get(history.beforeLast()));
 
         return true;
     }
 
-    public boolean undo() {
-        if (history.size() > 1) {
-            boolean result = history.remove(history.get(history.size() - 1));
-            if (result) {
-                board.get(current).state = FieldState.FREE;
-                current = history.get(history.size() - 1).clone();
-            }
-            return result;
-        }
-        return false;
+    private boolean undo() {
+        board.get(history.last()).setState(FieldState.FREE);
+        onFieldChanged(board.get(history.beforeLast()), board.get(history.last()));
+        history.remove(history.last());
+        return true;
+    }
+
+    private void onFieldChanged(Position current, Position last) {
+        if (movementListener != null)
+            movementListener.onFieldChanged(current, last);
     }
 
     public boolean isSolved() {
-        for (Field field : board)
-            if (field.state == FieldState.FREE)
+        for (Position field : board)
+            if (field.getState() == FieldState.FREE)
                 return false;
         return true;
     }
@@ -158,10 +156,11 @@ public abstract class Board {
     private boolean isAvailable(Position p) {
         if (!isWithinBounds(p))
             return false;
-        return board.get(p).state == FieldState.FREE;
+        return board.get(p).getState() == FieldState.FREE;
     }
 
     private boolean isLargeStep(Position p) {
+        Position current = history.last();
         return (Math.max(p.x, current.x) - Math.min(p.x, current.x))
                 + (Math.max(p.y, current.y) - Math.min(p.y, current.y)) > mStep * 2
                 || (Math.max(p.x, current.x) - Math.min(p.x, current.x)) > mStep
@@ -169,13 +168,21 @@ public abstract class Board {
     }
 
     private boolean isDiagonalMove(Position p) {
+        Position current = history.last();
         return Math.max(p.x, current.x) - Math.min(p.x, current.x)
                 == Math.max(p.y, current.y) - Math.min(p.y, current.y);
     }
 
     private boolean isSame(Position p) {
+        Position current = history.last();
         return p.equals(current);
     }
 
-    public abstract void onFieldChanged(Position position, FieldState newState);
+    public void setFieldMovementListener(IFieldMovementListener listener) {
+        this.movementListener = listener;
+    }
+
+    public Position getCurrent() {
+        return history.last();
+    }
 }
