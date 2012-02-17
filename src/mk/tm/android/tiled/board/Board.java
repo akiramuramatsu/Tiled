@@ -10,6 +10,12 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class Board {
+    private int mWidth;
+    private int mHeight;
+    private int mStep;
+    private boolean mAllowDiagonal;
+    private boolean mAllowBack;
+
     private BoardCollection board;
     private PositionCollection history;
     private IFieldMovementListener movementListener;
@@ -61,31 +67,27 @@ public class Board {
         history.add(startPosition);
     }
 
-    private int mWidth;
+
 
     public int getWidth() {
         return mWidth;
     }
 
-    private int mHeight;
-
     public int getHeight() {
         return mHeight;
     }
-
-    private int mStep;
 
     int getStep() {
         return mStep;
     }
 
-    private boolean mAllowDiagonal;
+
 
     public boolean getAllowDiagonal() {
         return mAllowDiagonal;
     }
 
-    private boolean mAllowBack;
+
 
     public boolean getAllowBack() {
         return mAllowBack;

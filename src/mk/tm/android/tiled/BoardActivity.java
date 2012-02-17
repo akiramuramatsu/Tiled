@@ -1,15 +1,14 @@
 package mk.tm.android.tiled;
 
+import android.util.SparseArray;
 import mk.tm.android.tiled.board.Position;
-import mk.tm.android.tiled.ui.BoardScene;
+import mk.tm.android.tiled.entity.BoardScene;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
-import org.andengine.entity.primitive.Rectangle;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.util.FPSLogger;
-import org.andengine.input.touch.TouchEvent;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 
 public class BoardActivity extends SimpleBaseGameActivity {
@@ -28,7 +27,6 @@ public class BoardActivity extends SimpleBaseGameActivity {
 
     @Override
     protected void onCreateResources() {
-
     }
 
     @Override

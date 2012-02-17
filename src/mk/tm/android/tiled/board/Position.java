@@ -13,6 +13,7 @@ public class Position {
     public final int y;
 
     private FieldState state;
+    private IStateChangedListener mStateChangedListener;
 
     public Position(int x, int y) {
         this.x = x;
@@ -25,16 +26,11 @@ public class Position {
 
     public void setState(FieldState state) {
         this.state = state;
+        if (this.mStateChangedListener != null)
+            this.mStateChangedListener.stateChanged(this);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return obj != null
-                && ((Position) obj).x == this.x
-                && ((Position) obj).y == this.y;
-    }
-
-    public Position clone() {
-        return new Position(this.x, this.y);
+    public void setStateChangedListener(IStateChangedListener stateChangedListener) {
+        this.mStateChangedListener = stateChangedListener;
     }
 }
