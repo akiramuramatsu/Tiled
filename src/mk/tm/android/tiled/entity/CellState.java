@@ -1,4 +1,4 @@
-package mk.tm.android.tiled.board;
+package mk.tm.android.tiled.entity;
 
 /**
  * Created by IntelliJ IDEA.
@@ -7,7 +7,7 @@ package mk.tm.android.tiled.board;
  * Time: 23:41
  * To change this template use File | Settings | File Templates.
  */
-public enum FieldState {
+public enum CellState {
     FREE,
     MARKED,
     UNAVAILABLE
