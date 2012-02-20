@@ -10,5 +10,6 @@ package mk.tm.android.tiled.entity;
 public enum CellState {
     FREE,
     MARKED,
+    NONEXISTENT,
     UNAVAILABLE
 }

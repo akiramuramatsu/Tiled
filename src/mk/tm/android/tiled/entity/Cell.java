@@ -1,7 +1,9 @@
 package mk.tm.android.tiled.entity;
 
-import mk.tm.android.tiled.GameConstants;
+import mk.tm.android.tiled.config.GameConstants;
 import org.andengine.entity.primitive.Rectangle;
+import org.andengine.entity.sprite.AnimatedSprite;
+import org.andengine.opengl.texture.region.ITiledTextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObject;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
@@ -12,28 +14,18 @@ import org.andengine.opengl.vbo.VertexBufferObjectManager;
  * Time: 00:03
  * To change this template use File | Settings | File Templates.
  */
-public class Cell extends Rectangle implements ICell, GameConstants {
+public class Cell extends AnimatedSprite implements GameConstants {
 
     protected int mCellX;
     protected int mCellY;
     protected CellState mState;
 
-    public Cell(final float pX, final float pY, final float pWidth, final float pHeight, final IRectangleVertexBufferObject pRectangleVertexBufferObject) {
-        super(pX, pY, pWidth, pHeight, pRectangleVertexBufferObject);
+    public Cell(final float pX, final float pY, final ITiledTextureRegion pTiledTextureRegion, final VertexBufferObjectManager pVertexBufferObjectManager) {
+        super(pX, pY, pTiledTextureRegion, pVertexBufferObjectManager);
     }
 
-    /**
-     * Uses a default {@link org.andengine.entity.primitive.Rectangle.HighPerformanceRectangleVertexBufferObject} in {@link org.andengine.opengl.vbo.VertexBufferObject.DrawType#STATIC} with the {@link org.andengine.opengl.vbo.attribute.VertexBufferObjectAttribute}s: {@link org.andengine.entity.primitive.Rectangle#VERTEXBUFFEROBJECTATTRIBUTES_DEFAULT}.
-     */
-    public Cell(final float pX, final float pY, final float pWidth, final float pHeight, final VertexBufferObjectManager pVertexBufferObjectManager) {
-        super(pX, pY, pWidth, pHeight, pVertexBufferObjectManager);
-    }
-
-    /**
-     * Uses a default {@link org.andengine.entity.primitive.Rectangle.HighPerformanceRectangleVertexBufferObject} with the {@link org.andengine.opengl.vbo.attribute.VertexBufferObjectAttribute}s: {@link org.andengine.entity.primitive.Rectangle#VERTEXBUFFEROBJECTATTRIBUTES_DEFAULT}.
-     */
-    public Cell(final float pX, final float pY, final float pWidth, final float pHeight, final VertexBufferObjectManager pVertexBufferObjectManager, final VertexBufferObject.DrawType pDrawType) {
-        super(pX, pY, pWidth, pHeight, pVertexBufferObjectManager, pDrawType);
+    public Cell(final float pX, final float pY, final float pWidth, final float pHeight, final ITiledTextureRegion pTiledTextureRegion, final VertexBufferObjectManager pVertexBufferObjectManager) {
+        super(pX, pY, pWidth, pHeight, pTiledTextureRegion, pVertexBufferObjectManager);
     }
 
 
@@ -53,10 +45,6 @@ public class Cell extends Rectangle implements ICell, GameConstants {
         return this.mState;
     }
 
-    public void setCell(final ICell pCellEntity) {
-        this.setCell(pCellEntity.getCellX(), pCellEntity.getCellY());
-    }
-
     public void setCell(final int pCellX, final int pCellY) {
         this.mCellX = pCellX;
         this.mCellY = pCellY;
@@ -67,7 +55,7 @@ public class Cell extends Rectangle implements ICell, GameConstants {
         this.mState = state;
     }
 
-    public boolean isInSameCell(final ICell pCellEntity) {
-        return this.mCellX == pCellEntity.getCellX() && this.mCellY == pCellEntity.getCellY();
+    public void animate() {
+        this.animate(150, false);
     }
 }

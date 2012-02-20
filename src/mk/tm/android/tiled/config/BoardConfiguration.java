@@ -1,4 +1,4 @@
-package mk.tm.android.tiled.entity;
+package mk.tm.android.tiled.config;
 
 import android.graphics.Point;
 
@@ -23,7 +23,7 @@ public class BoardConfiguration {
         mCells = new ArrayList<Point>();
 
         setSizeX(5);
-        setSizeY(5);
+        setSizeY(6);
         mStartCell = new Point(0, 0);
 
         for (int x = 0; x < getSizeX(); x++)

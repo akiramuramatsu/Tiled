@@ -1,23 +1,27 @@
 package mk.tm.android.tiled;
 
+import mk.tm.android.tiled.config.BoardConfiguration;
+import mk.tm.android.tiled.config.GameConstants;
 import mk.tm.android.tiled.entity.Board;
-import mk.tm.android.tiled.entity.BoardConfiguration;
 import mk.tm.android.tiled.entity.CellState;
 import mk.tm.android.tiled.entity.Cell;
+import mk.tm.android.tiled.entity.Player;
 import org.andengine.engine.camera.Camera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
-import org.andengine.entity.scene.background.RepeatingSpriteBackground;
-import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.input.touch.TouchEvent;
+import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
-import org.andengine.opengl.texture.atlas.bitmap.source.AssetBitmapTextureAtlasSource;
+import org.andengine.opengl.texture.atlas.bitmap.source.EmptyBitmapTextureAtlasSource;
+import org.andengine.opengl.texture.atlas.bitmap.source.decorator.LinearGradientFillBitmapTextureAtlasSourceDecorator;
+import org.andengine.opengl.texture.atlas.bitmap.source.decorator.shape.RectangleBitmapTextureAtlasSourceDecoratorShape;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.ITiledTextureRegion;
+import org.andengine.opengl.util.GLState;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.color.Color;
 
@@ -28,18 +32,16 @@ public class BoardActivity extends SimpleBaseGameActivity implements GameConstan
     // Constants
     // ===========================================================
 
-    private static final int CAMERA_WIDTH = 560;
-    private static final int CAMERA_HEIGHT = 720;
-
     private Board mScene;
 
     private BitmapTextureAtlas mBitmapTextureAtlas;
-    private ITiledTextureRegion mHeroTextureRegion;
+    private ITiledTextureRegion mPlayerTextureRegion;
+    private ITiledTextureRegion mCellTextureRegion;
 
-    private BitmapTextureAtlas mBackgroundTexture;
+    private BitmapTextureAtlas mBackgroundTextureAtlas;
     private ITextureRegion mBackgroundTextureRegion;
 
-    private AnimatedSprite mPlayer;
+    private Player mPlayer;
 
     private static final int LAYER_COUNT = 4;
 
@@ -61,12 +63,13 @@ public class BoardActivity extends SimpleBaseGameActivity implements GameConstan
         BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
 
         /* Load all the textures this game needs. */
-        this.mBackgroundTexture = new BitmapTextureAtlas(this.getTextureManager(), CAMERA_WIDTH, CAMERA_HEIGHT);
-        this.mBackgroundTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBackgroundTexture, this, "background.jpg", 0, 0);
-        this.mBackgroundTexture.load();
+        this.mBackgroundTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 2, CAMERA_HEIGHT);
+        this.mBackgroundTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(this.mBackgroundTextureAtlas, this, "background.png", 0, 0);
+        this.mBackgroundTextureAtlas.load();
 
-        this.mBitmapTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 128, 64);
-        this.mHeroTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mBitmapTextureAtlas, this, "bug_tiled.png", 0, 0, 2, 1);
+        this.mBitmapTextureAtlas = new BitmapTextureAtlas(this.getTextureManager(), 128, 256);
+        this.mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mBitmapTextureAtlas, this, "bug_tiled.png", 0, 0, 2, 1);
+        this.mCellTextureRegion = BitmapTextureAtlasTextureRegionFactory.createTiledFromAsset(this.mBitmapTextureAtlas, this, "cell.png", 0, 128, 2, 2);
         this.mBitmapTextureAtlas.load();
     }
 
@@ -87,23 +90,33 @@ public class BoardActivity extends SimpleBaseGameActivity implements GameConstan
 
             @Override
             protected void onCurrentCellChanged(Cell newCell, Cell oldCell) {
-                newCell.setColor(Color.BLACK);
-                mPlayer.setPosition(newCell.getX(), newCell.getY());
+                newCell.setState(CellState.MARKED);
+                mPlayer.animateTo(newCell.getX(), newCell.getY());
             }
         };
-        this.mScene.attachChild(new Sprite(0, 0, this.mBackgroundTextureRegion, this.getVertexBufferObjectManager()));
         this.mScene.initializeCells();
 
-        this.mPlayer = new AnimatedSprite(0, 0, this.mHeroTextureRegion, this.getVertexBufferObjectManager());
-        this.mPlayer.animate(100);
+        this.mPlayer = new Player(-100, -100, this.mPlayerTextureRegion, this.getVertexBufferObjectManager());
         this.mScene.attachChild(this.mPlayer);
+        this.mScene.tryMove(0, 0);
+
+        final Sprite sprite = new Sprite(0, 0, CAMERA_WIDTH, CAMERA_HEIGHT, mBackgroundTextureRegion, this.getVertexBufferObjectManager()){
+            @Override
+            protected void preDraw(GLState pGLState, Camera pCamera) {
+                super.preDraw(pGLState, pCamera);
+
+                pGLState.enableDither();
+            }
+        };
 
 
+        //this.mScene.setBackground(new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, getTextureManager(), AssetBitmapTextureAtlasSource.create(this.getAssets(), "gfx/background.jpg"), this.getVertexBufferObjectManager()));
 
-        this.mScene.setBackground(new RepeatingSpriteBackground(CAMERA_WIDTH, CAMERA_HEIGHT, getTextureManager(), AssetBitmapTextureAtlasSource.create(this.getAssets(), "gfx/background.jpg"), this.getVertexBufferObjectManager()));
-        this.mScene.setPosition(10, 10);
-
-        return this.mScene;
+        Scene scene = new Scene();
+        scene.attachChild(sprite);
+        scene.setChildScene(this.mScene);
+        this.mScene.setBackgroundEnabled(false);
+        return scene;
     }
 
 
@@ -111,10 +124,10 @@ public class BoardActivity extends SimpleBaseGameActivity implements GameConstan
 
     private Cell createField(int cellX, int cellY, CellState state) {
 
-        final float x = cellX * (TILE_WIDTH+ TILE_SPACING);
+        final float x = cellX * (TILE_WIDTH + TILE_SPACING);
         final float y = cellY * (TILE_HEIGHT + TILE_SPACING);
 
-        final Cell cell = new Cell(x, y, TILE_WIDTH, TILE_HEIGHT, this.getVertexBufferObjectManager()) {
+        final Cell cell = new Cell(x, y, this.mCellTextureRegion, this.getVertexBufferObjectManager()) {
             @Override
             public boolean onAreaTouched(TouchEvent pSceneTouchEvent, final float pTouchAreaLocalX, final float pTouchAreaLocalY) {
                 if (currentTouched != this) {
@@ -124,9 +137,6 @@ public class BoardActivity extends SimpleBaseGameActivity implements GameConstan
                 return true;
             }
         };
-
-        cell.setCell(cellX, cellY);
-        cell.setState(state);
         return cell;
     }
 }
