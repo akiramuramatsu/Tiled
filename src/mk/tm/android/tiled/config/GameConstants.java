@@ -16,4 +16,7 @@ public interface GameConstants {
 
     public static final int CAMERA_WIDTH = 480;
     public static final int CAMERA_HEIGHT = 720;
+
+    public static final String WORLD_ACTION = "mk.t.android.tiled.WORLD_ACTION";
+    public static final String LEVEL_ACTION = "mk.t.android.tiled.LEVEL_ACTION";
 }

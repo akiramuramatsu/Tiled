@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level size_x="5" size_y="5">
+    <start>
+        <cell x="0" y="0" />
+    </start>
+</level>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level size_x="5" size_y="7">
+    <start>
+        <cell x="2" y="1"/>
+    </start>
+    <nonexistent>
+        <cell x="1" y="1"/>
+        <cell x="1" y="2"/>
+    </nonexistent>
+    <unavailable>
+        <cell x="3" y="4"/>
+        <cell x="4" y="5"/>
+    </unavailable>
+</level>

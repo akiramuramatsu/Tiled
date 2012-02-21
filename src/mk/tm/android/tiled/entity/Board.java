@@ -1,9 +1,12 @@
 package mk.tm.android.tiled.entity;
 
 import android.graphics.Point;
-import mk.tm.android.tiled.config.BoardConfiguration;
+import mk.tm.android.tiled.config.LevelConfiguration;
 import mk.tm.android.tiled.config.GameConstants;
 import org.andengine.entity.scene.Scene;
+import org.andengine.input.touch.TouchEvent;
+import org.andengine.opengl.texture.region.ITiledTextureRegion;
+import org.andengine.opengl.vbo.VertexBufferObjectManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +25,11 @@ public abstract class Board extends Scene implements GameConstants {
     protected List<Cell> mCells;
     protected List<Cell> history;
 
-    private BoardConfiguration mConfiguration;
+    private Cell currentTouched;
 
-    protected Board(BoardConfiguration configuration) {
+    private LevelConfiguration mConfiguration;
+
+    protected Board(LevelConfiguration configuration) {
         super();
 
         mSizeX = configuration.getSizeX();
@@ -35,16 +40,36 @@ public abstract class Board extends Scene implements GameConstants {
         history = new ArrayList<Cell>();
         mCells = new ArrayList<Cell>();
 
-        setPosition((CAMERA_WIDTH - (mSizeX * TILE_WIDTH + (mSizeX - 1) * TILE_SPACING)) / 2
+        this.setPosition((CAMERA_WIDTH - (mSizeX * TILE_WIDTH + (mSizeX - 1) * TILE_SPACING)) / 2
                 , (CAMERA_HEIGHT - (mSizeY * TILE_HEIGHT + (mSizeY - 1) * TILE_SPACING)) / 2);
     }
 
-    public void initializeCells() {
-        for (Point p : mConfiguration.getCells()) {
-            Cell cell = onCreateCell(p.x, p.y, CellState.FREE);
-            mCells.add(cell);
-            cell.setCell(p.x, p.y);
+    public void initializeCells(ITiledTextureRegion pCellTextureRegion, VertexBufferObjectManager pVertexBufferObjectManager) {
+        for (Point point : mConfiguration.getCells()) {
+
+            if (mConfiguration.containsNonexistent(point))
+                continue;
+
+            final float x = point.x * (TILE_WIDTH + TILE_SPACING);
+            final float y = point.y * (TILE_HEIGHT + TILE_SPACING);
+
+            final Cell cell = new Cell(x, y, pCellTextureRegion, pVertexBufferObjectManager) {
+                @Override
+                public boolean onAreaTouched(TouchEvent pSceneTouchEvent, final float pTouchAreaLocalX, final float pTouchAreaLocalY) {
+                    if (currentTouched != this) {
+                        tryMove(this);
+                        currentTouched = this;
+                    }
+                    return true;
+                }
+            };
+
+            cell.setCell(point.x, point.y);
             cell.setState(CellState.FREE);
+            mCells.add(cell);
+
+            this.attachChild(cell);
+            this.registerTouchArea(cell);
         }
     }
 
@@ -54,8 +79,11 @@ public abstract class Board extends Scene implements GameConstants {
             canMove = false;
 
         if (canMove) {
-            onCurrentCellChanged(pCell, null);
+            pCell.setState(CellState.MARKED);
             pCell.animate();
+
+            this.onCurrentCellChanged(pCell, getCurrentCell());
+
             history.add(pCell);
         }
     }
@@ -78,7 +106,9 @@ public abstract class Board extends Scene implements GameConstants {
         return null;
     }
 
-    protected abstract Cell onCreateCell(int cellX, int cellY, CellState state);
-
     protected abstract void onCurrentCellChanged(Cell newCell, Cell oldCell);
+
+    public int getMarkedCellCount() {
+        return history.size();
+    }
 }
